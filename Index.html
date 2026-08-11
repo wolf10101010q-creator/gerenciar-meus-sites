@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Aplicativos</title>
+
+  <!-- 📱 Configurações PWA para GitHub Pages -->
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Manifesto embutido → abre sem barra do navegador -->
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWV1cyBBcGxpY2F0aXZvcyIsInNob3J0X25hbWUiOiJBcHBzIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBmMTcyYSIsInRoZW1lX2NvbG9yIjoiIzBmMTcyYSJ9">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    /* Tela de abertura */
+    .tela-inicial {
+      position: fixed; inset: 0;
+      background: linear-gradient(145deg, #0f172a, #1e293b);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 999;
+      transition: opacity 0.6s ease;
+    }
+    .tela-inicial.esconder { opacity: 0; pointer-events: none; }
+    .logo-inicial {
+      width: 120px; height: 120px; border-radius: 24px;
+      background: linear-gradient(145deg, #2563eb, #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; color: white; margin-bottom: 20px;
+    }
+    .titulo-inicial { color: #e2e8f0; font-size: 22px; margin-bottom: 8px; }
+    .sub-inicial { color: #94a3b8; font-size: 14px; }
+
+    body {
+      background: #0f172a; color: #e2e8f0;
+      padding: 12px; padding-top: 8px; padding-bottom: 80px;
+      max-width: 600px; margin: 0 auto;
+    }
+
+    .cabecalho {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+      position: sticky; top: 0; background: #0f172a; padding: 8px 0; z-index: 10;
+    }
+    .barra-pesquisa {
+      flex: 1;
+      padding: 10px 12px; border: none; border-radius: 8px;
+      background: #1e293b; color: #e2e8f0; font-size: 15px; outline: none;
+    }
+    .btn {
+      width: 42px; height: 42px; border: none; border-radius: 8px;
+      color: white; font-size: 20px; cursor: pointer;
+    }
+    .btn-azul { background: #2563eb; }
+    .btn-cinza { background: #475569; }
+    .btn-voltar { background: #475569; display: none; }
+
+    /* Lista de apps */
+    .tela-lista { display: block; }
+    .grade-apps {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px 8px;
+    }
+    .item-app {
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; position: relative;
+    }
+    .icone-app {
+      width: 64px; height: 64px; border-radius: 12px;
+      background: #1e293b; overflow: hidden; margin-bottom: 6px;
+    }
+    .icone-app img { width: 100%; height: 100%; object-fit: cover; }
+    .nome-app { font-size: 12px; color: #cbd5e1; text-align: center; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .marcador-selecao {
+      position: absolute; top: -4px; right: -4px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #2563eb; border: 2px solid #0f172a;
+      display: none;
+    }
+    .item-app.selecionado .marcador-selecao { display: block; }
+
+    /* Área de execução */
+    .tela-execucao {
+      display: none; position: fixed; inset: 0; top: 60px;
+      background: #0f172a; z-index: 5;
+    }
+    .tela-execucao iframe {
+      width: 100%; height: 100%; border: none;
+    }
+
+    /* Janela de cadastro */
+    .janela-form {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.92);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px; z-index: 20;
+    }
+    .caixa-form {
+      background: #1e293b; border-radius: 12px;
+      width: 100%; max-width: 400px; padding: 20px;
+    }
+    .caixa-form h2 { font-size: 18px; margin-bottom: 16px; color: #f1f5f9; }
+    .caixa-form input, .caixa-form textarea {
+      width: 100%; padding: 10px; margin-bottom: 12px;
+      border: none; border-radius: 8px;
+      background: #334155; color: #f1f5f9; font-size: 15px; outline: none;
+    }
+    .caixa-form textarea { min-height: 100px; resize: vertical; }
+    .area-imagem {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .btn-img {
+      padding: 8px 12px; border: none; border-radius: 8px;
+      background: #475569; color: white; cursor: pointer; font-size: 14px;
+    }
+    .preview-img {
+      width: 56px; height: 56px; border-radius: 8px;
+      background: #334155; object-fit: cover; display: none;
+    }
+    .botoes-form { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+    .btn-cancelar { background: #475569; }
+    .btn-salvar { background: #2563eb; }
+
+    /* Barra de exclusão */
+    .barra-excluir {
+      position: fixed; bottom: 12px; left: 12px; right: 12px;
+      background: #dc2626; border-radius: 10px; padding: 12px;
+      text-align: center; color: white; font-weight: bold;
+      display: none; cursor: pointer; z-index: 15;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela de abertura -->
+  <div class="tela-inicial" id="telaInicial">
+    <div class="logo-inicial">📂</div>
+    <h1 class="titulo-inicial">Meus Aplicativos</h1>
+    <p class="sub-inicial">Carregando sua coleção...</p>
+  </div>
+
+  <!-- Cabeçalho -->
+  <div class="cabecalho">
+    <button class="btn btn-voltar" id="btnVoltar" onclick="voltarLista()">←</button>
+    <input type="text" class="barra-pesquisa" id="pesquisa" placeholder="Pesquisar..." oninput="filtrarLista()">
+    <button class="btn btn-cinza" id="btnMenu" onclick="alternarModoExclusao()">⋮</button>
+    <button class="btn btn-azul" onclick="abrirFormulario()">+</button>
+  </div>
+
+  <!-- Lista de apps -->
+  <div class="tela-lista" id="telaLista">
+    <div class="grade-apps" id="gradeApps"></div>
+  </div>
+
+  <!-- Área de execução -->
+  <div class="tela-execucao" id="telaExecucao"></div>
+
+  <!-- Janela de cadastro -->
+  <div class="janela-form" id="janelaForm">
+    <div class="caixa-form">
+      <h2>Adicionar Aplicativo</h2>
+      <input type="text" id="inpNome" placeholder="Nome do aplicativo">
+      <div class="area-imagem">
+        <input type="file" id="inpImagem" accept="image/*" style="display:none" onchange="carregarImagem(this)">
+        <button class="btn-img" onclick="document.getElementById('inpImagem').click()">📷 Escolher Ícone</button>
+        <img class="preview-img" id="previewImg">
+      </div>
+      <textarea id="inpCodigo" placeholder="Cole o código HTML aqui..."></textarea>
+      <div class="botoes-form">
+        <button class="btn btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
+        <button class="btn btn-salvar" onclick="salvarApp()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de exclusão -->
+  <div class="barra-excluir" id="barraExcluir" onclick="excluirSelecionados()">🗑️ Excluir selecionados</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let imagemBase64 = "";
+  let modoExclusao = false;
+  let apps = JSON.parse(localStorage.getItem("apps") || "[]");
+
+  setTimeout(() => $("telaInicial").classList.add("esconder"), 1200);
+
+  function carregarImagem(input) {
+    const arq = input.files[0];
+    if (!arq) return;
+    const leitor = new FileReader();
+    leitor.onload = e => {
+      imagemBase64 = e.target.result;
+      $("previewImg").src = imagemBase64;
+      $("previewImg").style.display = "block";
+    };
+    leitor.readAsDataURL(arq);
+  }
+
+  function renderizarLista(lista = apps) {
+    $("gradeApps").innerHTML = "";
+    lista.forEach((app, indice) => {
+      const div = document.createElement("div");
+      div.className = "item-app";
+      div.dataset.indice = indice;
+      div.innerHTML = `
+        <div class="marcador-selecao"></div>
+        <div class="icone-app">
+          ${app.icone ? `<img src="${app.icone}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:24px;">📄</div>`}
+        </div>
+        <span class="nome-app">${app.nome}</span>
+      `;
+      div.onclick = () => modoExclusao ? selecionarItem(indice) : abrirApp(indice);
+      $("gradeApps").appendChild(div);
+    });
+  }
+
+  function filtrarLista() {
+    const termo = $("pesquisa").value.toLowerCase();
+    const filtrado = apps.filter(a => a.nome.toLowerCase().includes(termo));
+    renderizarLista(filtrado);
+  }
+
+  function abrirFormulario() {
+    $("janelaForm").style.display = "flex";
+    $("inpNome").value = "";
+    $("inpCodigo").value = "";
+    $("previewImg").style.display = "none";
+    imagemBase64 = "";
+  }
+  function fecharFormulario() {
+    $("janelaForm").style.display = "none";
+  }
+
+  function salvarApp() {
+    const nome = $("inpNome").value.trim();
+    const codigo = $("inpCodigo").value.trim();
+    if (!nome || !codigo) return alert("Preencha o nome e o código!");
+    apps.push({ nome, icone: imagemBase64, codigo });
+    localStorage.setItem("apps", JSON.stringify(apps));
+    fecharFormulario();
+    renderizarLista();
+  }
+
+  function abrirApp(indice) {
+    const app = apps[indice];
+    $("telaLista").style.display = "none";
+    $("telaExecucao").style.display = "block";
+    $("btnVoltar").style.display = "block";
+    $("telaExecucao").innerHTML = `<iframe srcdoc="${app.codigo.replaceAll('"', "&quot;")}"></iframe>`;
+  }
+
+  function voltarLista() {
+    $("telaExecucao").style.display = "none";
+    $("telaLista").style.display = "block";
+    $("btnVoltar").style.display = "none";
+    $("telaExecucao").innerHTML = "";
+  }
+
+  function alternarModoExclusao() {
+    modoExclusao = !modoExclusao;
+    $("barraExcluir").style.display = modoExclusao ? "block" : "none";
+    document.querySelectorAll(".item-app").forEach(el => el.classList.remove("selecionado"));
+  }
+  function selecionarItem(indice) {
+    const el = document.querySelector(`.item-app[data-indice="${indice}"]`);
+    el.classList.toggle("selecionado");
+  }
+  function excluirSelecionados() {
+    const selecionados = [...document.querySelectorAll(".item-app.selecionado")]
+      .map(el => Number(el.dataset.indice)).sort((a,b)=>b-a);
+    if (selecionados.length === 0) return;
+    if (!confirm(`Excluir ${selecionados.length} item(s)?`)) return;
+    selecionados.forEach(i => apps.splice(i, 1));
+    localStorage.setItem("apps", JSON.stringify(apps));
+    alternarModoExclusao();
+    renderizarLista();
+  }
+
+  renderizarLista();
+</script>
+</body>
+</html>
