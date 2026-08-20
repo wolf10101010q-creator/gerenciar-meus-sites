@@ -4,283 +4,587 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meus Aplicativos</title>
-
-  <!-- 📱 Configurações PWA para GitHub Pages -->
-  <meta name="theme-color" content="#0f172a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <!-- Manifesto embutido → abre sem barra do navegador -->
-  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWV1cyBBcGxpY2F0aXZvcyIsInNob3J0X25hbWUiOiJBcHBzIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBmMTcyYSIsInRoZW1lX2NvbG9yIjoiIzBmMTcyYSJ9">
-
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui; transition: background-color .3s, color .3s; }
+    :root { --icone: 64px; --raio: 16px; --barra: 56px; }
 
-    /* Tela de abertura */
-    .tela-inicial {
-      position: fixed; inset: 0;
-      background: linear-gradient(145deg, #0f172a, #1e293b);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 999;
-      transition: opacity 0.6s ease;
+    /* 🎨 TEMAS */
+    .tema-escuro {
+      --bg1: #1a1a2e; --bg2: #16213e; --bg3: #0f3460;
+      --card: #1e1e2f; --input: #2a2a4a; --texto: #fff; --texto2: #aaa;
+      --destaque: #4ade80; --borda: rgba(255,255,255,.1);
     }
-    .tela-inicial.esconder { opacity: 0; pointer-events: none; }
-    .logo-inicial {
-      width: 120px; height: 120px; border-radius: 24px;
-      background: linear-gradient(145deg, #2563eb, #4f46e5);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 48px; color: white; margin-bottom: 20px;
+    .tema-claro {
+      --bg1: #f8fafc; --bg2: #e2e8f0; --bg3: #cbd5e1;
+      --card: #ffffff; --input: #f1f5f9; --texto: #1e293b; --texto2: #64748b;
+      --destaque: #16a34a; --borda: rgba(0,0,0,.1);
     }
-    .titulo-inicial { color: #e2e8f0; font-size: 22px; margin-bottom: 8px; }
-    .sub-inicial { color: #94a3b8; font-size: 14px; }
+    .tema-azul {
+      --bg1: #0c4a6e; --bg2: #0369a1; --bg3: #0284c7;
+      --card: #075985; --input: #0369a1; --texto: #fff; --texto2: #bae6fd;
+      --destaque: #7dd3fc; --borda: rgba(255,255,255,.15);
+    }
+    .tema-verde {
+      --bg1: #14532d; --bg2: #166534; --bg3: #15803d;
+      --card: #166534; --input: #14532d; --texto: #fff; --texto2: #bbf7d0;
+      --destaque: #86efac; --borda: rgba(255,255,255,.15);
+    }
 
     body {
-      background: #0f172a; color: #e2e8f0;
-      padding: 12px; padding-top: 8px; padding-bottom: 80px;
-      max-width: 600px; margin: 0 auto;
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+      min-height: 100vh; color: var(--texto); padding: 20px; padding-bottom: 90px;
     }
-
-    .cabecalho {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-      position: sticky; top: 0; background: #0f172a; padding: 8px 0; z-index: 10;
+    .tela { position: absolute; inset: 0; display: none; flex-direction: column; }
+    .tela.ativa { display: flex; }
+    .tela--fixa { position: fixed; z-index: 10; }
+    .fundo-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      backdrop-filter: blur(8px); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .fundo-modal.ativo { display: flex; }
+    .janela {
+      background: var(--card); padding: 25px; border-radius: 20px;
+      width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+      border: 1px solid var(--borda);
+      box-shadow: 0 10px 40px rgba(0,0,0,.3);
+    }
+    .janela h2 { text-align: center; margin-bottom: 20px; color: var(--destaque); font-size: 1.3rem; }
+    .janela input, .janela textarea, .janela button {
+      width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px;
+      background: var(--input); color: var(--texto); font-size: 1rem; outline: none; border: 2px solid transparent;
+    }
+    .janela button { cursor: pointer; }
+    .janela textarea { min-height: 100px; resize: vertical; font-family: monospace; font-size: .9rem; }
+    .janela input:focus, .janela textarea:focus { border-color: var(--destaque); }
+    .janela label { display: block; margin-top: 15px; margin-bottom: 5px; color: var(--texto2); font-size: .9rem; }
+    .botoes-modal { display: flex; gap: 12px; margin-top: 20px; }
+    .botoes-modal button {
+      flex: 1; padding: 14px; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-salvar { background: #22c55e; color: #fff; }
+    .btn-cancelar { background: #475569; color: #fff; }
+    .btn-perigo { background: #dc2626; color: #fff; }
+    .btn-perigo:disabled { background: #7f1d1d; opacity: .5; cursor: not-allowed; }
+    .cabecalho { text-align: center; padding: 10px 20px 20px; position: relative; }
+    .cabecalho h1 {
+      font-size: 1.5rem; background: linear-gradient(90deg, var(--destaque), #22d3ee);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;
+    }
+    .btn-config {
+      position: absolute; top: 10px; right: 15px; background: rgba(255,255,255,.1);
+      border: none; color: var(--texto); padding: 8px 12px; border-radius: 10px;
+      font-size: 1.2rem; cursor: pointer;
     }
     .barra-pesquisa {
-      flex: 1;
-      padding: 10px 12px; border: none; border-radius: 8px;
-      background: #1e293b; color: #e2e8f0; font-size: 15px; outline: none;
+      width: 100%; max-width: 450px; margin: 0 auto 25px; position: sticky; top: 0; z-index: 50;
     }
-    .btn {
-      width: 42px; height: 42px; border: none; border-radius: 8px;
-      color: white; font-size: 20px; cursor: pointer;
+    .barra-pesquisa input {
+      width: 100%; padding: 14px 20px; border: none; border-radius: 16px;
+      background: rgba(255,255,255,.1); color: var(--texto); font-size: 1rem; outline: none;
+      border: 2px solid transparent;
     }
-    .btn-azul { background: #2563eb; }
-    .btn-cinza { background: #475569; }
-    .btn-voltar { background: #475569; display: none; }
+    .barra-pesquisa input:focus { border-color: var(--destaque); background: rgba(255,255,255,.15); }
+    .barra-pesquisa input::placeholder { color: var(--texto2); }
+    .grade {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 25px 15px; max-width: 500px; margin: 0 auto;
+    }
+    .app {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; transition: transform .2s; position: relative;
+    }
+    .app.oculto { display: none; }
+    .app:active { transform: scale(.95); }
 
-    /* Lista de apps */
-    .tela-lista { display: block; }
-    .grade-apps {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 16px 8px;
+    /* 🔘 BOLINHA DE SELEÇÃO — CANTO ESQUERDO */
+    .bolinha-selecao {
+      position: absolute; top: 4px; left: 0; width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--texto2); background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10; transition: all .2s;
+      opacity: 0; pointer-events: none; /* Escondida por padrão */
     }
-    .item-app {
-      display: flex; flex-direction: column; align-items: center;
-      cursor: pointer; position: relative;
+    .modo-exclusao .bolinha-selecao {
+      opacity: 1; pointer-events: auto; /* Aparece no modo exclusão */
     }
-    .icone-app {
-      width: 64px; height: 64px; border-radius: 12px;
-      background: #1e293b; overflow: hidden; margin-bottom: 6px;
+    .bolinha-selecao.selecionada {
+      background: #ef4444; border-color: #ef4444;
+      box-shadow: 0 0 0 2px rgba(239,68,68,.3);
     }
-    .icone-app img { width: 100%; height: 100%; object-fit: cover; }
-    .nome-app { font-size: 12px; color: #cbd5e1; text-align: center; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .marcador-selecao {
-      position: absolute; top: -4px; right: -4px;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: #2563eb; border: 2px solid #0f172a;
-      display: none;
-    }
-    .item-app.selecionado .marcador-selecao { display: block; }
-
-    /* Área de execução */
-    .tela-execucao {
-      display: none; position: fixed; inset: 0; top: 60px;
-      background: #0f172a; z-index: 5;
-    }
-    .tela-execucao iframe {
-      width: 100%; height: 100%; border: none;
+    .bolinha-selecao.selecionada::after {
+      content: "✓"; color: #fff; font-size: 13px; font-weight: bold;
     }
 
-    /* Janela de cadastro */
-    .janela-form {
-      position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.92);
-      display: none; align-items: center; justify-content: center;
-      padding: 16px; z-index: 20;
+    .icone {
+      width: var(--icone); height: var(--icone); border-radius: var(--raio);
+      background: linear-gradient(145deg, var(--input), var(--card)); display: flex;
+      align-items: center; justify-content: center; font-size: 1.8rem; overflow: hidden;
+      border: 2px solid var(--borda); box-shadow: 0 4px 12px rgba(0,0,0,.2);
     }
-    .caixa-form {
-      background: #1e293b; border-radius: 12px;
-      width: 100%; max-width: 400px; padding: 20px;
+    .icone img { width: 100%; height: 100%; object-fit: cover; }
+    .icone-letra { font-size: 2rem; font-weight: bold; color: var(--texto); }
+    .nome-app {
+      font-size: .8rem; color: var(--texto); text-align: center; max-width: 90px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .caixa-form h2 { font-size: 18px; margin-bottom: 16px; color: #f1f5f9; }
-    .caixa-form input, .caixa-form textarea {
-      width: 100%; padding: 10px; margin-bottom: 12px;
-      border: none; border-radius: 8px;
-      background: #334155; color: #f1f5f9; font-size: 15px; outline: none;
+    .btn-adicionar .icone {
+      background: rgba(255,255,255,.05); border: 2px dashed var(--borda);
+      font-size: 1.5rem; color: var(--texto2);
     }
-    .caixa-form textarea { min-height: 100px; resize: vertical; }
-    .area-imagem {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    .barra-acoes-exclusao {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+      background: var(--card); border-top: 1px solid var(--borda);
+      display: none; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 80;
+      box-shadow: 0 -4px 15px rgba(0,0,0,.2);
     }
-    .btn-img {
-      padding: 8px 12px; border: none; border-radius: 8px;
-      background: #475569; color: white; cursor: pointer; font-size: 14px;
+    .barra-acoes-exclusao.ativa { display: flex; }
+    .barra-navegacao {
+      height: var(--barra); background: var(--card);
+      display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--borda);
+      flex-shrink: 0;
     }
-    .preview-img {
-      width: 56px; height: 56px; border-radius: 8px;
-      background: #334155; object-fit: cover; display: none;
+    .btn-voltar {
+      background: rgba(74,222,128,.15); color: var(--destaque); border: none;
+      padding: 10px 16px; border-radius: 12px; font-size: .95rem; font-weight: 600; cursor: pointer;
     }
-    .botoes-form { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
-    .btn-cancelar { background: #475569; }
-    .btn-salvar { background: #2563eb; }
-
-    /* Barra de exclusão */
-    .barra-excluir {
-      position: fixed; bottom: 12px; left: 12px; right: 12px;
-      background: #dc2626; border-radius: 10px; padding: 12px;
-      text-align: center; color: white; font-weight: bold;
-      display: none; cursor: pointer; z-index: 15;
+    .titulo-site { flex: 1; text-align: center; font-size: 1rem; color: var(--texto); padding-right: 80px; }
+    .conteudo-site { flex: 1; width: 100%; border: none; background: #fff; }
+    .tipo-icone-opcoes { display: flex; gap: 10px; margin: 10px 0; }
+    .tipo-icone-btn {
+      flex: 1; padding: 10px; border: 2px solid var(--borda);
+      background: transparent; color: var(--texto2); border-radius: 10px; cursor: pointer; transition: all .2s;
+    }
+    .tipo-icone-btn.ativo {
+      border-color: var(--destaque); background: rgba(74,222,128,.1); color: var(--destaque);
+    }
+    .temas-opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .btn-tema {
+      padding: 12px; border-radius: 10px; border: 2px solid transparent;
+      cursor: pointer; font-size: .9rem; font-weight: 500;
+    }
+    .btn-tema.ativo { border-color: var(--destaque); transform: scale(1.05); }
+    .tema-escuro-btn { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; }
+    .tema-claro-btn { background: linear-gradient(135deg, #f8fafc, #e2e8f0); color: #1e293b; }
+    .tema-azul-btn { background: linear-gradient(135deg, #0c4a6e, #0369a1); color: #fff; }
+    .tema-verde-btn { background: linear-gradient(135deg, #14532d, #166534); color: #fff; }
+    .emojis-grade { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 10px; }
+    .emoji-item {
+      font-size: 1.5rem; text-align: center; padding: 8px; border-radius: 8px;
+      cursor: pointer; transition: background .2s;
+    }
+    .emoji-item:hover, .emoji-item.selecionado { background: rgba(74,222,128,.2); }
+    .campo-icone { display: none; }
+    .campo-icone.visivel { display: block; }
+    .indicador-atualizacao {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      background: rgba(34,197,94,.2); color: #22c55e; padding: 6px 16px;
+      border-radius: 20px; font-size: .8rem; z-index: 999;
+      opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    .indicador-atualizacao.mostrar { opacity: 1; }
+    .carregando { text-align: center; padding: 40px; color: var(--destaque); grid-column: 1/-1; }
+    .aviso { text-align: center; padding: 40px; color: var(--texto2); grid-column: 1/-1; line-height: 1.6; }
+    .btn-pequeno {
+      padding: 10px 14px; font-size: .9rem; border-radius: 10px; border: none;
+      cursor: pointer; width: 100%; margin: 8px 0;
     }
   </style>
 </head>
-<body>
+<body class="tema-escuro" id="corpo-principal">
 
-  <!-- Tela de abertura -->
-  <div class="tela-inicial" id="telaInicial">
-    <div class="logo-inicial">📂</div>
-    <h1 class="titulo-inicial">Meus Aplicativos</h1>
-    <p class="sub-inicial">Carregando sua coleção...</p>
-  </div>
+<div class="indicador-atualizacao" id="indicador-atualizacao">✅ Atualizado</div>
 
-  <!-- Cabeçalho -->
+<div class="tela ativa" id="tela-inicial">
   <div class="cabecalho">
-    <button class="btn btn-voltar" id="btnVoltar" onclick="voltarLista()">←</button>
-    <input type="text" class="barra-pesquisa" id="pesquisa" placeholder="Pesquisar..." oninput="filtrarLista()">
-    <button class="btn btn-cinza" id="btnMenu" onclick="alternarModoExclusao()">⋮</button>
-    <button class="btn btn-azul" onclick="abrirFormulario()">+</button>
+    <h1>📱 Meus Aplicativos</h1>
+    <button class="btn-config" onclick="abrirJanela('modal-config')">⚙️</button>
   </div>
-
-  <!-- Lista de apps -->
-  <div class="tela-lista" id="telaLista">
-    <div class="grade-apps" id="gradeApps"></div>
+  <div class="barra-pesquisa">
+    <input type="text" id="pesquisa" placeholder="🔍 Pesquisar aplicativos..." oninput="filtrarApps()">
   </div>
+  <div class="grade" id="grade-apps">
+    <div class="carregando">Carregando aplicativos...</div>
+  </div>
+</div>
 
-  <!-- Área de execução -->
-  <div class="tela-execucao" id="telaExecucao"></div>
+<div class="tela tela--fixa" id="tela-site">
+  <div class="barra-navegacao">
+    <button class="btn-voltar" onclick="fecharTela('tela-site'); abrirTela('tela-inicial')">⬅️ Voltar</button>
+    <span class="titulo-site" id="titulo-site"></span>
+  </div>
+  <iframe class="conteudo-site" id="conteudo-site" srcdoc=""></iframe>
+</div>
 
-  <!-- Janela de cadastro -->
-  <div class="janela-form" id="janelaForm">
-    <div class="caixa-form">
-      <h2>Adicionar Aplicativo</h2>
-      <input type="text" id="inpNome" placeholder="Nome do aplicativo">
-      <div class="area-imagem">
-        <input type="file" id="inpImagem" accept="image/*" style="display:none" onchange="carregarImagem(this)">
-        <button class="btn-img" onclick="document.getElementById('inpImagem').click()">📷 Escolher Ícone</button>
-        <img class="preview-img" id="previewImg">
-      </div>
-      <textarea id="inpCodigo" placeholder="Cole o código HTML aqui..."></textarea>
-      <div class="botoes-form">
-        <button class="btn btn-cancelar" onclick="fecharFormulario()">Cancelar</button>
-        <button class="btn btn-salvar" onclick="salvarApp()">Salvar</button>
-      </div>
+<!-- 🗑️ BARRA DE AÇÕES — APARECE QUANDO NO MODO DE EXCLUSÃO -->
+<div class="barra-acoes-exclusao" id="barra-exclusao">
+  <button class="btn-cancelar" style="flex:1; padding:12px;" onclick="sairModoExclusao()">❌ Cancelar</button>
+  <button class="btn-perigo" id="btn-apagar-selecionados" style="flex:1; padding:12px;" onclick="apagarSelecionados()" disabled>🗑️ Apagar (0)</button>
+</div>
+
+<div class="fundo-modal" id="modal-add">
+  <div class="janela">
+    <h2 id="titulo-add">➕ Adicionar Aplicativo</h2>
+    <input type="text" id="nome-app" placeholder="Nome do aplicativo">
+    <label>Tipo de Ícone:</label>
+    <div class="tipo-icone-opcoes">
+      <button class="tipo-icone-btn ativo" data-tipo="emoji" onclick="mudarTipoIcone('emoji')">😀 Emoji</button>
+      <button class="tipo-icone-btn" data-tipo="letra" onclick="mudarTipoIcone('letra')">Aa Letra</button>
+      <button class="tipo-icone-btn" data-tipo="imagem" onclick="mudarTipoIcone('imagem')">🖼️ Imagem</button>
+    </div>
+    <div class="campo-icone visivel" id="campo-emoji">
+      <label>Escolha um emoji:</label>
+      <div class="emojis-grade" id="lista-emojis"></div>
+    </div>
+    <div class="campo-icone" id="campo-letra">
+      <input type="text" id="texto-icone" placeholder="Digite uma letra ou símbolo" maxlength="2">
+    </div>
+    <div class="campo-icone" id="campo-imagem">
+      <input type="text" id="img-app" placeholder="URL da imagem">
+    </div>
+    <label>Código do site / Conteúdo:</label>
+    <textarea id="codigo-app" placeholder="📋 Cole o código HTML ou conteúdo aqui..."></textarea>
+    <div class="botoes-modal">
+      <button class="btn-cancelar" onclick="fecharJanela('modal-add')">❌ Cancelar</button>
+      <button class="btn-salvar" onclick="salvarApp()">✅ Salvar</button>
     </div>
   </div>
+</div>
 
-  <!-- Barra de exclusão -->
-  <div class="barra-excluir" id="barraExcluir" onclick="excluirSelecionados()">🗑️ Excluir selecionados</div>
+<div class="fundo-modal" id="modal-config">
+  <div class="janela">
+    <h2>⚙️ Configurações</h2>
+
+    <!-- 🎨 TEMA -->
+    <label>🎨 Tema de fundo:</label>
+    <div class="temas-opcoes">
+      <button class="btn-tema tema-escuro-btn ativo" data-tema="escuro" onclick="mudarTema('escuro')">🌙 Escuro</button>
+      <button class="btn-tema tema-claro-btn" data-tema="claro" onclick="mudarTema('claro')">☀️ Claro</button>
+      <button class="btn-tema tema-azul-btn" data-tema="azul" onclick="mudarTema('azul')">🌊 Azul</button>
+      <button class="btn-tema tema-verde-btn" data-tema="verde" onclick="mudarTema('verde')">🌿 Verde</button>
+    </div>
+
+    <div style="height: 1px; background: var(--borda); margin: 20px 0;"></div>
+
+    <!-- 🗑️ EXCLUIR ITENS -->
+    <label>🗑️ Gerenciar aplicativos:</label>
+    <button class="btn-perigo btn-pequeno" onclick="iniciarModoExclusao(); fecharJanela('modal-config');">🗑️ Excluir itens...</button>
+    <p style="font-size:.8rem; color: var(--texto2); margin-top: 8px; line-height: 1.5;">
+      Clique para selecionar os aplicativos que deseja remover.
+    </p>
+
+    <div style="height: 1px; background: var(--borda); margin: 20px 0;"></div>
+
+    <!-- ℹ️ INFO -->
+    <p style="font-size:.85rem; color: var(--texto2); text-align: center; line-height: 1.6;">
+      ✅ Dados salvos na nuvem automaticamente.<br>
+      🔒 Configurações de acesso protegidas.
+    </p>
+
+    <div class="botoes-modal">
+      <button class="btn-cancelar" onclick="fecharJanela('modal-config')" style="flex:1;">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <script>
-  const $ = id => document.getElementById(id);
-  let imagemBase64 = "";
-  let modoExclusao = false;
-  let apps = JSON.parse(localStorage.getItem("apps") || "[]");
+const $ = id => document.getElementById(id);
+const SENHA_ACESSO = "solmar";
+const EMOJIS = ["📱","💬","🌐","🎮","📚","🎵","📷","⚙️","🏠","📂","🔍","⭐","❤️","🔥","💡","📝","🎨","📊","📈","💻","🔔","📧","📅","🎯","🛒","🎁","📰","🌙","☀️","⚡","🔒","🔑"];
 
-  setTimeout(() => $("telaInicial").classList.add("esconder"), 1200);
+// ==============================================
+// ✅ SEUS DADOS FIXOS — NÃO ALTERAR!
+// ==============================================
+const JSONBIN_ID = "6a8668b9da38895dfef9a730";
+const JSONBIN_KEY = "$2a$10$7CAI7MjsFfgYYFzpjv/2g.wS1.EqV/gP4o8/Ic7Kl8PejTQtGIRRC";
 
-  function carregarImagem(input) {
-    const arq = input.files[0];
-    if (!arq) return;
-    const leitor = new FileReader();
-    leitor.onload = e => {
-      imagemBase64 = e.target.result;
-      $("previewImg").src = imagemBase64;
-      $("previewImg").style.display = "block";
+const estado = {
+  apps: [],
+  editando: null,
+  temaAtual: "escuro",
+  tipoIcone: "emoji",
+  emojiEscolhido: "📌",
+  modoExclusao: false,
+  selecionados: new Set()
+};
+
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/";
+
+// ==============================================
+// 🎨 SISTEMA DE TEMAS
+// ==============================================
+function mudarTema(tema) {
+  document.body.classList.remove("tema-escuro", "tema-claro", "tema-azul", "tema-verde");
+  document.body.classList.add(`tema-${tema}`);
+  estado.temaAtual = tema;
+  document.querySelectorAll(".btn-tema").forEach(b => b.classList.remove("ativo"));
+  document.querySelector(`[data-tema="${tema}"]`).classList.add("ativo");
+  localStorage.setItem("temaAplicativo", tema);
+}
+function carregarTema() {
+  const salvo = localStorage.getItem("temaAplicativo");
+  if (salvo) mudarTema(salvo);
+}
+
+// ==============================================
+// 🗑️ MODO EXCLUSÃO — BOLINHAS DE SELEÇÃO
+// ==============================================
+function iniciarModoExclusao() {
+  estado.modoExclusao = true;
+  estado.selecionados.clear();
+  $("corpo-principal").classList.add("modo-exclusao");
+  $("barra-exclusao").classList.add("ativa");
+  atualizarBotaoApagar();
+  renderizar(); // Recarrega com as bolinhas visíveis
+}
+function sairModoExclusao() {
+  estado.modoExclusao = false;
+  estado.selecionados.clear();
+  $("corpo-principal").classList.remove("modo-exclusao");
+  $("barra-exclusao").classList.remove("ativa");
+  renderizar(); // Recarrega sem bolinhas
+}
+function toggleSelecao(i, e) {
+  e.stopPropagation(); // Não abre o app ao clicar na bolinha
+  if (estado.selecionados.has(i)) estado.selecionados.delete(i);
+  else estado.selecionados.add(i);
+  atualizarBotaoApagar();
+  renderizar(); // Atualiza visual (bolinha marcada/desmarcada)
+}
+function atualizarBotaoApagar() {
+  const btn = $("btn-apagar-selecionados");
+  const qtd = estado.selecionados.size;
+  btn.textContent = `🗑️ Apagar (${qtd})`;
+  btn.disabled = qtd === 0;
+}
+async function apagarSelecionados() {
+  const qtd = estado.selecionados.size;
+  if (qtd === 0) return alert("Selecione pelo menos um aplicativo!");
+  if (!confirm(`⚠️ Tem certeza que deseja apagar ${qtd} aplicativo(s)?\nEsta ação não pode ser desfeita!`)) return;
+  
+  // Apaga de trás pra frente pra não bagunçar os índices
+  const indices = Array.from(estado.selecionados).sort((a,b) => b - a);
+  indices.forEach(i => estado.apps.splice(i, 1));
+  
+  await salvarBanco();
+  alert(`✅ ${qtd} aplicativo(s) removido(s)!`);
+  sairModoExclusao();
+}
+
+// ==============================================
+// 📱 TELAS E JANELAS
+// ==============================================
+function abrirTela(id) { document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); $(id).classList.add('ativa'); }
+function fecharTela(id) { $(id).classList.remove('ativa'); }
+function abrirJanela(id) { $(id).classList.add("ativo"); }
+function fecharJanela(id) { $(id).classList.remove("ativo"); estado.editando = null; }
+function mostrarAtualizado() {
+  const el = $("indicador-atualizacao"); el.classList.add("mostrar");
+  setTimeout(()=>el.classList.remove("mostrar"), 1500);
+}
+
+// ==============================================
+// 🎨 ÍCONES
+// ==============================================
+function renderizarEmojis() {
+  const g = $("lista-emojis"); g.innerHTML = "";
+  EMOJIS.forEach(e=>{
+    const d = document.createElement("div");
+    d.className = `emoji-item ${e===estado.emojiEscolhido?'selecionado':''}`;
+    d.textContent = e; d.onclick = ()=>{estado.emojiEscolhido=e;renderizarEmojis();};
+    g.appendChild(d);
+  });
+}
+function mudarTipoIcone(tipo) {
+  estado.tipoIcone = tipo;
+  document.querySelectorAll(".tipo-icone-btn").forEach(b=>b.classList.remove("ativo"));
+  document.querySelector(`[data-tipo="${tipo}"]`).classList.add("ativo");
+  document.querySelectorAll(".campo-icone").forEach(c=>c.classList.remove("visivel"));
+  $(`campo-${tipo}`).classList.add("visivel");
+}
+
+// ==============================================
+// 🔍 PESQUISA
+// ==============================================
+function filtrarApps() {
+  const t = $("pesquisa").value.trim().toLowerCase();
+  document.querySelectorAll(".app").forEach(a=>{
+    const n = a.querySelector(".nome-app").textContent.toLowerCase();
+    a.classList.toggle("oculto", t && !n.includes(t));
+  });
+}
+
+// ==============================================
+// 📲 RENDERIZAR APLICATIVOS
+// ==============================================
+function renderizar() {
+  const g = $("grade-apps"); 
+  
+  if (estado.apps.length === 0) {
+    g.innerHTML = `<div class="aviso">Nenhum aplicativo ainda.<br>Clique em ➕ para adicionar o primeiro!</div>`;
+    return;
+  }
+  
+  g.innerHTML = "";
+  estado.apps.forEach((app,i)=>{
+    const div = document.createElement("div");
+    div.className = "app";
+    let icone = "";
+    if (app.iconeTipo === "imagem") icone = `<img src="${app.iconeValor}" alt="">`;
+    else if (app.iconeTipo === "letra") icone = `<span class="icone-letra">${app.iconeValor}</span>`;
+    else icone = `<span>${app.iconeValor||'📌'}</span>`;
+    
+    // 🔘 BOLINHA DE SELEÇÃO — aparece só no modo exclusão
+    const bolinha = estado.modoExclusao 
+      ? `<div class="bolinha-selecao ${estado.selecionados.has(i)?'selecionada':''}" onclick="toggleSelecao(${i}, event)"></div>` 
+      : "";
+    
+    div.innerHTML = `
+      ${bolinha}
+      <div class="icone">${icone}</div>
+      <div class="nome-app">${app.nome}</div>
+    `;
+    
+    // No modo exclusão, clique só marca/desmarca. Fora do modo, abre o app
+    if (estado.modoExclusao) {
+      div.onclick = (e) => toggleSelecao(i, e);
+    } else {
+      div.onclick = () => abrirApp(i);
+      div.ondblclick = () => editarApp(i);
+    }
+    
+    g.appendChild(div);
+  });
+  
+  // Botão Adicionar — escondido no modo exclusão
+  if (!estado.modoExclusao) {
+    const add = document.createElement("div");
+    add.className = "app btn-adicionar";
+    add.innerHTML = `<div class="icone">+</div><div class="nome-app">Adicionar</div>`;
+    add.onclick = ()=>{
+      estado.editando = null;
+      $("titulo-add").textContent = "➕ Adicionar Aplicativo";
+      $("nome-app").value = "";
+      $("codigo-app").value = "";
+      estado.tipoIcone = "emoji";
+      estado.emojiEscolhido = "📌";
+      document.querySelectorAll(".tipo-icone-btn").forEach(b=>b.classList.remove("ativo"));
+      document.querySelector("[data-tipo='emoji']").classList.add("ativo");
+      document.querySelectorAll(".campo-icone").forEach(c=>c.classList.remove("visivel"));
+      $("campo-emoji").classList.add("visivel");
+      $("img-app").value = "";
+      $("texto-icone").value = "";
+      renderizarEmojis();
+      abrirJanela("modal-add");
     };
-    leitor.readAsDataURL(arq);
+    g.appendChild(add);
   }
+}
 
-  function renderizarLista(lista = apps) {
-    $("gradeApps").innerHTML = "";
-    lista.forEach((app, indice) => {
-      const div = document.createElement("div");
-      div.className = "item-app";
-      div.dataset.indice = indice;
-      div.innerHTML = `
-        <div class="marcador-selecao"></div>
-        <div class="icone-app">
-          ${app.icone ? `<img src="${app.icone}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:24px;">📄</div>`}
-        </div>
-        <span class="nome-app">${app.nome}</span>
-      `;
-      div.onclick = () => modoExclusao ? selecionarItem(indice) : abrirApp(indice);
-      $("gradeApps").appendChild(div);
+// ==============================================
+// 🌐 ABRIR / EDITAR APP
+// ==============================================
+function abrirApp(i) {
+  const app = estado.apps[i];
+  if (!app.codigo) return alert("Sem conteúdo/código!");
+  $("titulo-site").textContent = app.nome;
+  $("conteudo-site").srcdoc = app.codigo;
+  abrirTela("tela-site");
+}
+function editarApp(i) {
+  estado.editando = i;
+  const app = estado.apps[i];
+  $("titulo-add").textContent = "✏️ Editar Aplicativo";
+  $("nome-app").value = app.nome;
+  $("codigo-app").value = app.codigo || "";
+  estado.tipoIcone = app.iconeTipo || "emoji";
+  estado.emojiEscolhido = app.iconeValor || "📌";
+  document.querySelectorAll(".tipo-icone-btn").forEach(b=>b.classList.remove("ativo"));
+  document.querySelector(`[data-tipo="${estado.tipoIcone}"]`).classList.add("ativo");
+  document.querySelectorAll(".campo-icone").forEach(c=>c.classList.remove("visivel"));
+  $(`campo-${estado.tipoIcone}`).classList.add("visivel");
+  $("img-app").value = app.iconeTipo === "imagem" ? app.iconeValor : "";
+  $("texto-icone").value = app.iconeTipo === "letra" ? app.iconeValor : "";
+  renderizarEmojis();
+  abrirJanela("modal-add");
+}
+
+// ==============================================
+// 💾 SALVAR NO JSONBIN
+// ==============================================
+async function salvarApp() {
+  const nome = $("nome-app").value.trim();
+  const codigo = $("codigo-app").value.trim();
+  let iconeValor = "";
+  if (estado.tipoIcone === "emoji") iconeValor = estado.emojiEscolhido;
+  else if (estado.tipoIcone === "letra") iconeValor = $("texto-icone").value.trim() || "A";
+  else iconeValor = $("img-app").value.trim();
+  
+  if (!nome) return alert("Digite o nome do aplicativo!");
+  
+  const dados = { nome, codigo, iconeTipo: estado.tipoIcone, iconeValor };
+  
+  if (estado.editando !== null) estado.apps[estado.editando] = dados;
+  else estado.apps.push(dados);
+  
+  await salvarBanco();
+  fecharJanela("modal-add");
+  alert("✅ Salvo com sucesso!");
+}
+
+async function salvarBanco() {
+  try {
+    const res = await fetch(JSONBIN_URL + JSONBIN_ID, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+      body: JSON.stringify({ aplicativos: estado.apps })
     });
+    if (!res.ok) throw new Error("Erro ao salvar");
+    renderizar();
+    mostrarAtualizado();
+  } catch (e) {
+    console.error("Erro ao salvar:", e);
+    alert("⚠️ Erro ao salvar! Verifique sua conexão.");
   }
+}
 
-  function filtrarLista() {
-    const termo = $("pesquisa").value.toLowerCase();
-    const filtrado = apps.filter(a => a.nome.toLowerCase().includes(termo));
-    renderizarLista(filtrado);
+// ==============================================
+// 📥 CARREGAR DO JSONBIN
+// ==============================================
+async function carregarApps() {
+  try {
+    const res = await fetch(JSONBIN_URL + JSONBIN_ID, {
+      method: "GET",
+      headers: { "X-Master-Key": JSONBIN_KEY }
+    });
+    if (!res.ok) throw new Error("Erro ao carregar");
+    const dados = await res.json();
+    estado.apps = dados.record?.aplicativos || dados.record || [];
+    renderizar();
+    mostrarAtualizado();
+  } catch (e) {
+    console.error("Erro ao carregar:", e);
+    $("grade-apps").innerHTML = `
+      <div class="aviso">
+        ⚠️ Não foi possível carregar os dados.<br>
+        Verifique sua conexão e tente novamente.
+      </div>`;
   }
+}
 
-  function abrirFormulario() {
-    $("janelaForm").style.display = "flex";
-    $("inpNome").value = "";
-    $("inpCodigo").value = "";
-    $("previewImg").style.display = "none";
-    imagemBase64 = "";
-  }
-  function fecharFormulario() {
-    $("janelaForm").style.display = "none";
-  }
-
-  function salvarApp() {
-    const nome = $("inpNome").value.trim();
-    const codigo = $("inpCodigo").value.trim();
-    if (!nome || !codigo) return alert("Preencha o nome e o código!");
-    apps.push({ nome, icone: imagemBase64, codigo });
-    localStorage.setItem("apps", JSON.stringify(apps));
-    fecharFormulario();
-    renderizarLista();
-  }
-
-  function abrirApp(indice) {
-    const app = apps[indice];
-    $("telaLista").style.display = "none";
-    $("telaExecucao").style.display = "block";
-    $("btnVoltar").style.display = "block";
-    $("telaExecucao").innerHTML = `<iframe srcdoc="${app.codigo.replaceAll('"', "&quot;")}"></iframe>`;
-  }
-
-  function voltarLista() {
-    $("telaExecucao").style.display = "none";
-    $("telaLista").style.display = "block";
-    $("btnVoltar").style.display = "none";
-    $("telaExecucao").innerHTML = "";
-  }
-
-  function alternarModoExclusao() {
-    modoExclusao = !modoExclusao;
-    $("barraExcluir").style.display = modoExclusao ? "block" : "none";
-    document.querySelectorAll(".item-app").forEach(el => el.classList.remove("selecionado"));
-  }
-  function selecionarItem(indice) {
-    const el = document.querySelector(`.item-app[data-indice="${indice}"]`);
-    el.classList.toggle("selecionado");
-  }
-  function excluirSelecionados() {
-    const selecionados = [...document.querySelectorAll(".item-app.selecionado")]
-      .map(el => Number(el.dataset.indice)).sort((a,b)=>b-a);
-    if (selecionados.length === 0) return;
-    if (!confirm(`Excluir ${selecionados.length} item(s)?`)) return;
-    selecionados.forEach(i => apps.splice(i, 1));
-    localStorage.setItem("apps", JSON.stringify(apps));
-    alternarModoExclusao();
-    renderizarLista();
-  }
-
-  renderizarLista();
+// ==============================================
+// 🚀 INICIAR
+// ==============================================
+document.addEventListener("DOMContentLoaded", () => {
+  carregarTema();
+  renderizarEmojis();
+  carregarApps();
+  setInterval(carregarApps, 30000);
+  
+  $("modal-add").addEventListener("click", e => e.target === $("modal-add") && fecharJanela("modal-add"));
+  $("modal-config").addEventListener("click", e => e.target === $("modal-config") && fecharJanela("modal-config"));
+});
 </script>
 </body>
 </html>
